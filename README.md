@@ -1,5 +1,5 @@
 # test_locks
-
+<pre>
 example output for windows pro 64 relase
 --
 $ ./test_locks.exe
@@ -42,3 +42,5 @@ task completed in 182396 usec
 110   383149
 111   412888
 112   373130
+
+</pre>
