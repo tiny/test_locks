@@ -127,7 +127,7 @@ void consume_nolock()
 {
   uint32_t  tid = thread_self();
   {
-//    lock_guard<spin>  sc(tids_spx);
+    lock_guard<mutex>  sc(tids_mtx);
     tids[tid] = 0;
   }
   while (!start) { u_sleep(1); }
@@ -165,7 +165,11 @@ void test_mutex( void (*fn)() )
   int64_t end_tm = timeGetTime64();
 
   int64_t  dt = end_tm - start_tm;
+#if defined(_WIN32) || defined(_WIN64)
+  printf("task completed in %I64d usec \n", dt);
+#else
   printf("task completed in %I64ld usec \n", dt);
+#endif
 } // :: test_mutex
 
 int main()
