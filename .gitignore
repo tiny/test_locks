@@ -22,6 +22,9 @@
 *.log
 *.res
 *.user
+*.o
+*~
+core.*
 Buildlog.*
 .vs
 .svn
@@ -31,3 +34,4 @@ Debug
 Release
 obsolete
 retired_code
+test_locks

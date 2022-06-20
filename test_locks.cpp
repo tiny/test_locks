@@ -5,20 +5,33 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <vector>
+#include <thread>
 #include <mutex>
 #include <map>
 
 using namespace std;
 
+int64_t  __start_tm = 0;
+int64_t  __latest_tm = 0;
+int64_t  __now64 = 0;
+int32_t  __now = 0 ;
+int32_t  __thread_id_ticker = 100; 
+
+int64_t timeGetTime64() {
+  __latest_tm = std::chrono::system_clock::now().time_since_epoch() / std::chrono::microseconds(1);
+  if (__start_tm == 0) __start_tm = __latest_tm;
+  return (__now64 = (__latest_tm - __start_tm));
+} // :: timeGetTime64
+
+int32_t thread_self()
+{
+  return (++__thread_id_ticker) ;
+} // :: thread_self
+
 #if defined(_WIN32) || defined(_WIN64)
 #  include <windows.h>
 #  include <mmsystem.h>  // brings in timeGetTime
 #  include <stdint.h>
-
-uint32_t thread_self()
-{
-  return ::GetCurrentThreadId();
-} // :: thread_self
 
 #else
 
@@ -28,22 +41,7 @@ int32_t timeGetTime() {
   return __now;
 } // :: timeGetTime
 
-uint32_t thread_self()
-{
-  return ::pthread_self();
-} // :: thread_self
 #endif
-
-
-int64_t  __start_tm = 0;
-int64_t  __latest_tm = 0;
-int64_t  __now64 = 0;
-
-int64_t timeGetTime64() {
-  __latest_tm = std::chrono::system_clock::now().time_since_epoch() / std::chrono::microseconds(1);
-  if (__start_tm == 0) __start_tm = __latest_tm;
-  return (__now64 = (__latest_tm - __start_tm));
-} // :: timeGetTime
 
 void u_sleep(uint32_t ms)
 {
@@ -89,7 +87,7 @@ void display()
 {
   for (auto x : tids)
   {
-    printf("%6d   %6d\n", x.first, x.second);
+    printf("%3d   %6d\n", x.first, x.second);
   }
 } // :: display
 
@@ -167,7 +165,7 @@ void test_mutex( void (*fn)() )
   int64_t end_tm = timeGetTime64();
 
   int64_t  dt = end_tm - start_tm;
-  printf("task completed in %I64d usec \n", dt);
+  printf("task completed in %I64ld usec \n", dt);
 } // :: test_mutex
 
 int main()
