@@ -49,6 +49,9 @@ void u_sleep(uint32_t ms)
 } // :: u_sleep
 
 
+#ifdef FIRST_ATTEMPT
+// performance was lacking
+
 class spin
 {
 private:
@@ -69,6 +72,49 @@ public:
     lock_.clear(std::memory_order_release);
   }
 }; // class spin 
+
+#else
+
+#  if defined(_WIN32) || defined(_WIN64)
+#  define mm_pause      _mm_pause
+#  else
+#  define mm_pause      __builtin_ia32_pause
+#  endif
+
+struct spin 
+{
+  std::atomic<bool> lock_ = { 0 };
+
+  void lock() noexcept {
+    for (;;) {
+      // Optimistically assume the lock is free on the first try
+      if (!lock_.exchange(true, std::memory_order_acquire)) {
+        return;
+      }
+      // Wait for lock to be released without generating cache misses
+      while (lock_.load(std::memory_order_relaxed)) {
+        // Issue X86 PAUSE or ARM YIELD instruction to reduce contention between
+        // hyper-threads
+        mm_pause();
+      }
+    }
+  }
+
+  bool try_lock() noexcept {
+    // First do a relaxed load to check if lock is free in order to prevent
+    // unnecessary cache misses if someone does while(!try_lock())
+    return !lock_.load(std::memory_order_relaxed) &&
+      !lock_.exchange(true, std::memory_order_acquire);
+  }
+
+  void unlock() noexcept {
+    lock_.store(false, std::memory_order_release);
+  }
+};
+
+#endif
+
+
 
 typedef map<uint32_t, uint32_t>               ThreadMap;
 typedef map<uint32_t, uint32_t>::iterator     ThreadMap_iter ;
@@ -175,19 +221,19 @@ void test_mutex( void (*fn)() )
 int main()
 {
   printf("====[]  mutex\n");
-  u_sleep(50); // let everything get ready
+  u_sleep(50); 
   tids.clear();
   test_mutex( consume_mtx );
   display();
 
   printf("====[]  spin_lock\n");
-  u_sleep(50); // let everything get ready
+  u_sleep(50); 
   tids.clear();
   test_mutex(consume_spx);
   display();
 
   printf("====[]  nolock\n");
-  u_sleep(50); // let everything get ready
+  u_sleep(50); 
   tids.clear();
   test_mutex(consume_nolock);
   display();
