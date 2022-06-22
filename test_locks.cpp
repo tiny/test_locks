@@ -34,6 +34,7 @@ int32_t thread_self()
 #  include <stdint.h>
 
 #else
+#  include <atomic>
 
 int32_t timeGetTime() {
   timeGetTime64();
