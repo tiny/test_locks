@@ -168,7 +168,7 @@ void test_mutex( void (*fn)() )
 #if defined(_WIN32) || defined(_WIN64)
   printf("task completed in %I64d usec \n", dt);
 #else
-  printf("task completed in %I64ld usec \n", dt);
+  printf("task completed in %ld usec \n", dt);
 #endif
 } // :: test_mutex
 
