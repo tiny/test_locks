@@ -21,7 +21,6 @@
 *.ipch
 *.log
 *.res
-*.user
 *.o
 *~
 core.*
